@@ -1,136 +1,113 @@
 # ============================================================
-#  QtCourse -> GitHub 一键部署 / 推送脚本
+#  QtCourse -> GitHub 部署 / 推送脚本 (v3)
 #
-#  用法（新开一个 PowerShell 窗口）：
-#     powershell -ExecutionPolicy Bypass -File D:\Qt\QtCourse\.deploy.ps1 -Deploy -Push
+#  修正了两个真实问题：
+#    A) git 调用 ssh 时没走 ~/.ssh/config 的 443 配置（实测 git 去连了 22 端口）
+#       -> 改为把端口/密钥直接写进 git 自己的 core.sshCommand，不再依赖 config
+#    B) v2 里 Copy-Item 失败了却仍打印成功
+#       -> 现在检查 $? 并把结论放进变量
 #
-#  只测认证不推送：
-#     powershell -ExecutionPolicy Bypass -File D:\Qt\QtCourse\.deploy.ps1 -Test
+#  用法：
+#     powershell -ExecutionPolicy Bypass -File D:\Qt\QtCourse\.deploy.ps1 -Push
+#     powershell -ExecutionPolicy Bypass -File D:\Qt\QtCourse\.deploy.ps1 -Diag
 # ============================================================
 param(
-    [switch]$Deploy,
     [switch]$Push,
-    [switch]$Test,
+    [switch]$Diag,
     [string]$UserName = "MuchengHualuo",
     [string]$Email    = "muchenghualuo@users.noreply.github.com",
     [string]$Remote   = "git@github.com:MuchengHualuo/Qtcourse.git"
 )
 
 $ErrorActionPreference = "Continue"
-$RepoDir   = "D:\Qt\QtCourse"
-$KeyDir    = "D:\Qt\.git-setup"
-$SshDir    = Join-Path $env:USERPROFILE ".ssh"
-$Expected  = "SHA256:EtEapCmgaBUGGSoszmVSI8gIH1dQ0z9Yi0NVQpqIEl0"
+$RepoDir  = "D:\Qt\QtCourse"
+$SshDir   = Join-Path $env:USERPROFILE ".ssh"
+$KeyPath  = Join-Path $SshDir "id_ed25519_github"
+$Expected = "SHA256:EtEapCmgaBUGGSoszmVSI8gIH1dQ0z9Yi0NVQpqIEl0"
 
-function Say($m) { Write-Host "  $m" }
+function Say($m)  { Write-Host "  $m" }
 function Head($m) { Write-Host "`n=== $m ===" -ForegroundColor Cyan }
+function Ok($m)   { Write-Host "  [OK] $m" -ForegroundColor Green }
+function Bad($m)  { Write-Host "  [!!] $m" -ForegroundColor Red }
 
-# ---------------- 1) 部署密钥与 SSH 配置 ----------------
-if ($Deploy) {
-    Head "[1/3] Deploy SSH key + config"
+# ---------- 诊断 ----------
+Head "Diagnose"
 
-    if (-not (Test-Path $SshDir)) { New-Item -ItemType Directory -Path $SshDir -Force | Out-Null }
+# 1. git 版本
+$gitExe = (Get-Command git -ErrorAction SilentlyContinue).Source
+if (-not $gitExe) { Bad "git not found in PATH"; exit 1 }
+Ok "git: $(& git --version)  ($gitExe)"
 
-    Copy-Item (Join-Path $KeyDir "id_ed25519_github")     $SshDir -Force
-    Copy-Item (Join-Path $KeyDir "id_ed25519_github.pub") $SshDir -Force
-    Say "key copied to $SshDir"
+# 2. 密钥
+if (-not (Test-Path $KeyPath)) {
+    Bad "private key missing: $KeyPath"
+    exit 1
+}
+$fp = (& ssh-keygen -lf $KeyPath 2>&1) -join ""
+Say "local key : $fp"
+if ($fp -match [regex]::Escape(($Expected -split ' ')[1])) { Ok "fingerprint matches expected" }
+else { Bad "fingerprint mismatch, expected $Expected" }
 
-    $cfg = Join-Path $SshDir "config"
-    $existing = if (Test-Path $cfg) { Get-Content $cfg -Raw } else { "" }
-    if ($existing -match "ssh\.github\.com") {
-        Say "github.com block already in config"
-    } else {
-        $block = @"
-
-# ==== GitHub (SSH over 443, required on this network) ====
-Host github.com
-    Hostname ssh.github.com
-    Port 443
-    User git
-    IdentityFile ~/.ssh/id_ed25519_github
-    IdentitiesOnly yes
-"@
-        Add-Content -LiteralPath $cfg -Value $block -Encoding UTF8
-        Say "github block appended to config"
-    }
+# 3. SSH over 443（显式参数，不依赖 config）
+Say "testing ssh over 443 ..."
+$sshArgs = @("-p","443","-i",$KeyPath,
+             "-o","IdentitiesOnly=yes",
+             "-o","BatchMode=yes",
+             "-o","StrictHostKeyChecking=accept-new",
+             "-o","ConnectTimeout=30",
+             "-T","git@ssh.github.com")
+$r = (& ssh @sshArgs 2>&1) -join "`n"
+Say $r
+if ($r -match "successfully authenticated") {
+    Ok "GitHub recognized this key"
+    $script:sshOk = $true
+} else {
+    $script:sshOk = $false
+    Bad "GitHub did NOT authenticate this key (see message above)"
 }
 
-# ---------------- 2) 诊断 SSH 认证 ----------------
-if ($Deploy -or $Test) {
-    Head "[2/3] Test GitHub SSH authentication"
+if ($Diag -and -not $Push) { exit 0 }
 
-    $fp = (& ssh-keygen -lf (Join-Path $SshDir "id_ed25519_github") 2>&1) -join ""
-    Say "local key fingerprint : $fp"
-    Say "expected fingerprint  : $Expected"
-    if ($fp -notmatch [regex]::Escape(($Expected -split ' ')[1])) {
-        Write-Host "  !! local key does NOT match the expected key" -ForegroundColor Red
-    }
-
-    Say "contacting github.com ..."
-    $t = (& ssh -T -o BatchMode=yes -o ConnectTimeout=30 git@github.com 2>&1) -join "`n"
-    Say $t
-
-    if ($t -match "successfully authenticated") {
-        Write-Host "  ==> SSH OK, GitHub recognized this key" -ForegroundColor Green
-    } else {
-        Write-Host "  ==> SSH FAILED: GitHub did not recognize this key." -ForegroundColor Red
-        Write-Host ""
-        Write-Host "  Add EXACTLY this line at https://github.com/settings/keys" -ForegroundColor Yellow
-        Write-Host "  (tick Key type = Authentication Key; do NOT add it as a Deploy key)" -ForegroundColor Yellow
-        Write-Host ""
-        Write-Host ("  " + (Get-Content (Join-Path $SshDir "id_ed25519_github.pub") -Raw).Trim()) -ForegroundColor White
-        Write-Host ""
-        Write-Host "  After adding, GitHub shows a fingerprint. It MUST be:" -ForegroundColor Yellow
-        Write-Host "  $Expected" -ForegroundColor White
-        Write-Host ""
-        Write-Host "  Note: 'ssh -T' failing is EXPECTED if the key was added as a" -ForegroundColor Gray
-        Write-Host "  Deploy key (repo-level) instead of an account-level key." -ForegroundColor Gray
-        Write-Host "  Deploy keys cannot authenticate the account, but they CAN" -ForegroundColor Gray
-        Write-Host "  still push. So if ls-remote below succeeds, just continue." -ForegroundColor Gray
-    }
-}
-
-# ---------------- 3) 提交并推送 ----------------
+# ---------- 推送 ----------
 if ($Push) {
-    Head "[3/3] Commit and push"
+    Head "Commit and push"
     Set-Location $RepoDir
 
-    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-        throw "git not found in PATH. Install Git for Windows first."
-    }
-    Say "git: $((git --version))"
-
-    if (-not (Test-Path (Join-Path $RepoDir ".git"))) {
-        & git init
-        & git branch -M main
-    } else {
-        Say "existing .git found, reusing"
-    }
+    # 关键修复：把 ssh 参数写进 git 自己的配置，绕开 ~/.ssh/config
+    $sshCmd = "ssh -p 443 -i `"$KeyPath`" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+    & git config core.sshCommand $sshCmd
+    Ok "core.sshCommand = $sshCmd"
 
     & git config user.name  $UserName
     & git config user.email $Email
-    & git add -A
 
-    Say "--- staged files ---"
+    if (-not (Test-Path (Join-Path $RepoDir ".git"))) {
+        & git init
+    } else {
+        Say "existing .git reused"
+    }
+
+    & git add -A
+    Say "--- staged ---"
     & git status --short
 
-    $hasCommit = (& git rev-parse --verify HEAD 2>$null)
-    if (-not $hasCommit) {
+    # 注意：git branch -M 必须放在首次 commit 之后，
+    # 否则新仓库还没有 HEAD，会报 "not a valid object name: main"
+    if (-not (& git rev-parse --verify HEAD 2>$null)) {
         & git commit -m "Qt sample 2.4: hybrid UI design with About tool button"
     } else {
         & git commit -m "Update Qt sample 2.4" 2>$null
-        Say "(nothing to commit is fine)"
     }
+
+    & git branch -M main
+    Ok "current branch = main"
 
     $remotes = & git remote
-    if ($remotes -notcontains "origin") {
-        & git remote add origin $Remote
-    } else {
-        & git remote set-url origin $Remote
-    }
-    Say "remote origin = $Remote"
+    if ($remotes -notcontains "origin") { & git remote add origin $Remote }
+    else { & git remote set-url origin $Remote }
+    Ok "remote = $Remote"
 
-    Say "checking remote reachability ..."
+    Say "ls-remote (reachability) ..."
     & git ls-remote --heads origin 2>&1 | Select-Object -First 3
 
     Say "pushing ..."
@@ -139,10 +116,13 @@ if ($Push) {
     if ($LASTEXITCODE -eq 0) {
         Write-Host "`n  PUSH OK -> https://github.com/$UserName/Qtcourse" -ForegroundColor Green
     } else {
-        Write-Host "`n  PUSH FAILED, see message above." -ForegroundColor Red
+        Write-Host "`n  PUSH FAILED (see above)" -ForegroundColor Red
+        Write-Host "  - 'Repository not found'      -> wrong user/repo name" -ForegroundColor Yellow
+        Write-Host "  - 'Permission denied'         -> key not recognized by GitHub" -ForegroundColor Yellow
+        Write-Host "  - 'Connection refused/refused'-> port 443 not taking effect" -ForegroundColor Yellow
     }
 }
 
-if (-not $Deploy -and -not $Push -and -not $Test) {
-    Write-Host "Nothing to do. Use -Deploy, -Test and/or -Push." -ForegroundColor Yellow
+if (-not $Push -and -not $Diag) {
+    Write-Host "Nothing to do. Use -Diag and/or -Push." -ForegroundColor Yellow
 }
