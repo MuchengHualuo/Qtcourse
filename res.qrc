@@ -1,0 +1,16 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/">
+        <!-- 图标全部来自 RemixIcon —— https://github.com/Remix-Design/RemixIcon
+             许可证：Apache License 2.0 -->
+        <file>icons/shield-user-line.svg</file>   <!-- “关于”按钮 -->
+        <file>icons/folder-open-line.svg</file>   <!-- 打开 -->
+        <file>icons/draft-line.svg</file>         <!-- 保存 -->
+        <file>icons/file-copy-line.svg</file>     <!-- 复制 -->
+        <file>icons/clipboard-line.svg</file>     <!-- 粘贴 -->
+        <file>icons/delete-bin-line.svg</file>    <!-- 清空 -->
+        <file>icons/logout-box-line.svg</file>    <!-- 退出 -->
+        <file>icons/login-box-line.svg</file>     <!-- 登录 -->
+        <file>icons/information-line.svg</file>   <!-- 提示信息 -->
+    </qresource>
+</RCC>

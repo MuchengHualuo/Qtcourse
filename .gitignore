@@ -1,0 +1,39 @@
+﻿# 鏋勫缓浜х墿
+build/
+build-*/
+*.pro.user
+*.user
+
+# IDE 鏈湴閰嶇疆锛堟瘡浜烘満鍣ㄤ笂閮戒笉涓€鏍凤紝涓嶅簲鍏ュ簱锛?.qtcreator/
+.vscode/
+.idea/
+CMakeLists.txt.user*
+
+# 缂栬瘧涓棿浜х墿
+*.o
+*.obj
+*.exe
+*.dll
+*.a
+*.so
+*.dylib
+
+# 璋冭瘯涓庣郴缁熸枃浠?*.pdb
+*.ilk
+*.log
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# 鏈湴涓存椂鎴浘
+*.png
+
+# 鏈満涓撶敤閰嶇疆锛堝惈鐢ㄦ埛鍚?閭/瀵嗛挜璺緞锛屼笉搴斿叆搴擄級
+.github-ssh-config.txt
+.gitconfig-local
+
+# 瀵嗛挜绛夋晱鎰熸枃浠讹紝缁濆涓嶈鎻愪氦
+.ssh/
+*.pem
+id_rsa*
+id_ed25519*
