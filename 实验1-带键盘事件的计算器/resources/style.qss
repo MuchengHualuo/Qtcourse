@@ -1,0 +1,82 @@
+/* 计算器界面样式：深色主题，数字键 / 功能键 / 运算符三种外观 */
+QMainWindow,
+QWidget#centralWidget {
+    background-color: #1c1c1e;
+}
+
+QLabel#expressionLabel {
+    color: #8e8e93;
+    font-size: 15px;
+    padding-right: 4px;
+}
+
+QLineEdit#displayEdit {
+    background-color: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 46px;
+    font-weight: 300;
+    padding: 4px 6px;
+}
+
+/* 错误提示（除零、溢出）使用红色小号字 */
+QLineEdit#displayEdit[error="true"] {
+    color: #ff453a;
+    font-size: 26px;
+    font-weight: 500;
+}
+
+QPushButton {
+    background-color: #2c2c2e;
+    border: none;
+    border-radius: 20px;
+    color: #ffffff;
+    font-size: 22px;
+}
+
+QPushButton:hover {
+    background-color: #3a3a3c;
+}
+
+QPushButton:pressed {
+    background-color: #505054;
+}
+
+QPushButton[role="function"] {
+    background-color: #3a3a3c;
+    color: #ff9f0a;
+}
+
+QPushButton[role="function"]:hover {
+    background-color: #48484a;
+}
+
+QPushButton[role="operator"] {
+    background-color: #ff9f0a;
+    color: #1c1c1e;
+    font-size: 26px;
+    font-weight: 600;
+}
+
+QPushButton[role="operator"]:hover {
+    background-color: #ffb340;
+}
+
+QPushButton[role="operator"]:pressed {
+    background-color: #d98508;
+}
+
+QPushButton[role="equals"] {
+    background-color: #ff9f0a;
+    color: #1c1c1e;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+QPushButton[role="equals"]:hover {
+    background-color: #ffb340;
+}
+
+QPushButton[role="equals"]:pressed {
+    background-color: #d98508;
+}
