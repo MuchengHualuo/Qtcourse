@@ -154,6 +154,9 @@ int main(int argc, char *argv[])
             }
             QTextStream(stdout) << "saved " << filePath << " (" << shot.width() << "x"
                                 << shot.height() << ")\n";
+        } else if (command == QLatin1String("resize") && parts.size() >= 3) {
+            window.resize(parts.at(1).toInt(), parts.at(2).toInt());
+            QApplication::processEvents();
         } else if (command == QLatin1String("wait") && parts.size() >= 2) {
             QApplication::processEvents();
         } else {

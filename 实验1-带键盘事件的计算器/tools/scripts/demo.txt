@@ -1,0 +1,118 @@
+# 计算器功能演示脚本（生成实验报告插图）
+# 1. 默认界面
+snap 01_default
+
+# 2. 鼠标完成带小数的加法：1.5 + 2.5 = 4
+click btn1
+click btnDot
+click btn5
+click btnAdd
+click btn2
+click btnDot
+click btn5
+snap 02_mouse_decimal_input
+click btnEquals
+snap 03_mouse_decimal_result
+click btnClear
+
+# 3. 键盘输入：12.5 × 4 = 50，并保留按下“×”时的高亮
+key 1
+key 2
+key .
+key 5
+keydown *
+snap 04_keyboard_operator
+keyup *
+key 4
+key Enter
+snap 05_keyboard_result
+key Escape
+
+# 4. 退格与清除：输入 123，退格两次得到 1，再清除
+key 1
+key 2
+key 3
+snap 06_typing
+key Backspace
+key Backspace
+snap 07_backspace
+key Escape
+snap 08_cleared
+
+# 5. 除零错误
+key 8
+key /
+key 0
+key Enter
+snap 09_divide_by_zero
+key Escape
+
+# 6. 连续运算 2 + 3 × 4 = 20
+key 2
+key +
+key 3
+key *
+snap 10_chain_mid
+key 4
+key Enter
+snap 11_chain_result
+key Escape
+
+# 7. 结果后继续输入：8 + 5 = 13，再输入 7 应从 7 开始
+key 8
+key +
+key 5
+key Enter
+snap 12_result_before_continue
+key 7
+snap 13_continue_input
+key Escape
+
+# 8. 连续小数点：1.2.3 只保留 1.23
+key 1
+key .
+key 2
+key .
+key 3
+snap 14_repeated_dot
+key Escape
+
+# 9. 鼠标与键盘混合：点击 6，键盘 × 3，点击 =，结果 18
+click btn6
+key *
+key 3
+click btnEquals
+snap 15_mixed_input
+
+# 10. 连续运算 2 + 3 + 4 = 9
+key Escape
+key 2
+key +
+key 3
+key +
+key 4
+key Enter
+snap 17_chain_result
+
+# 11. 精度：1 ÷ 3 保留 12 位有效数字
+key Escape
+key 1
+key /
+key 3
+key Enter
+snap 18_precision
+
+# 12. 浮点尾差：0.1 + 0.2 = 0.3
+key Escape
+key .
+key 1
+key +
+key .
+key 2
+key Enter
+snap 19_float_tail
+
+# 13. 窗口放大后的布局自适应
+key Escape
+resize 440 640
+snap 16_resized
