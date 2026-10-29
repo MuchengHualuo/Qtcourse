@@ -1,6 +1,9 @@
 #include "calculatorengine.h"
+#include "mainwindow.h"
 
 #include <QApplication>
+#include <QLineEdit>
+#include <QPushButton>
 #include <QtTest>
 
 /**
@@ -250,6 +253,120 @@ void CalculatorEngineTest::signToggle()
     QCOMPARE(m_engine.display(), QStringLiteral("-5"));
 }
 
+/**
+ * @brief 主窗口测试：验证键盘事件与鼠标点击走同一套逻辑、结果一致。
+ */
+class MainWindowTest : public QObject
+{
+    Q_OBJECT
+
+private slots:
+    void init();
+    void cleanup();
+
+    void keyboardBasicCalculation();
+    void keyboardBackspaceAndClear();
+    void keyboardNumpadKeys();
+    void keyboardHighlightsButton();
+    void mixedMouseAndKeyboard();
+    void shortcutModifiersAreIgnored();
+
+private:
+    QString displayText() const;
+    void clickButton(const QString &objectName);
+
+    MainWindow *m_window = nullptr;
+};
+
+void MainWindowTest::init()
+{
+    m_window = new MainWindow;
+    m_window->show();
+    QTest::qWait(10);
+}
+
+void MainWindowTest::cleanup()
+{
+    delete m_window;
+    m_window = nullptr;
+}
+
+QString MainWindowTest::displayText() const
+{
+    const auto *edit = m_window->findChild<QLineEdit *>(QStringLiteral("displayEdit"));
+    return edit ? edit->text() : QString();
+}
+
+void MainWindowTest::clickButton(const QString &objectName)
+{
+    auto *button = m_window->findChild<QPushButton *>(objectName);
+    QVERIFY2(button, qPrintable("missing button " + objectName));
+    QTest::mouseClick(button, Qt::LeftButton);
+}
+
+void MainWindowTest::keyboardBasicCalculation()
+{
+    QTest::keyClick(m_window, Qt::Key_1);
+    QTest::keyClick(m_window, Qt::Key_Period);
+    QTest::keyClick(m_window, Qt::Key_5);
+    QCOMPARE(displayText(), QStringLiteral("1.5"));
+
+    QTest::keyClick(m_window, Qt::Key_Asterisk);
+    QTest::keyClick(m_window, Qt::Key_2);
+    QTest::keyClick(m_window, Qt::Key_Return);
+    QCOMPARE(displayText(), QStringLiteral("3"));
+}
+
+void MainWindowTest::keyboardBackspaceAndClear()
+{
+    QTest::keyClick(m_window, Qt::Key_1);
+    QTest::keyClick(m_window, Qt::Key_2);
+    QTest::keyClick(m_window, Qt::Key_3);
+    QCOMPARE(displayText(), QStringLiteral("123"));
+
+    QTest::keyClick(m_window, Qt::Key_Backspace);
+    QCOMPARE(displayText(), QStringLiteral("12"));
+
+    QTest::keyClick(m_window, Qt::Key_Escape);
+    QCOMPARE(displayText(), QStringLiteral("0"));
+}
+
+void MainWindowTest::keyboardNumpadKeys()
+{
+    QTest::keyClick(m_window, Qt::Key_7, Qt::KeypadModifier);
+    QTest::keyClick(m_window, Qt::Key_Plus, Qt::KeypadModifier);
+    QTest::keyClick(m_window, Qt::Key_8, Qt::KeypadModifier);
+    QTest::keyClick(m_window, Qt::Key_Enter, Qt::KeypadModifier);
+    QCOMPARE(displayText(), QStringLiteral("15"));
+}
+
+void MainWindowTest::keyboardHighlightsButton()
+{
+    auto *addButton = m_window->findChild<QPushButton *>(QStringLiteral("btnAdd"));
+    QVERIFY(addButton);
+
+    QTest::keyPress(m_window, Qt::Key_Plus);
+    QVERIFY(addButton->isDown());
+    QTest::keyRelease(m_window, Qt::Key_Plus);
+    QVERIFY(!addButton->isDown());
+}
+
+void MainWindowTest::mixedMouseAndKeyboard()
+{
+    clickButton(QStringLiteral("btn6"));
+    QTest::keyClick(m_window, Qt::Key_Asterisk);
+    clickButton(QStringLiteral("btn3"));
+    clickButton(QStringLiteral("btnEquals"));
+    QCOMPARE(displayText(), QStringLiteral("18"));
+}
+
+void MainWindowTest::shortcutModifiersAreIgnored()
+{
+    QTest::keyClick(m_window, Qt::Key_5);
+    QTest::keyClick(m_window, Qt::Key_C, Qt::ControlModifier);
+    QCOMPARE(displayText(), QStringLiteral("5")); // Ctrl+C 不应触发“清除”
+}
+
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -257,6 +374,9 @@ int main(int argc, char *argv[])
     int status = 0;
     CalculatorEngineTest engineTest;
     status |= QTest::qExec(&engineTest, argc, argv);
+
+    MainWindowTest windowTest;
+    status |= QTest::qExec(&windowTest, argc, argv);
     return status;
 }
 
