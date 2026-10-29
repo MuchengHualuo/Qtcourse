@@ -75,6 +75,47 @@ calculator_add_generated_files(calculator_screenshots)
 target_include_directories(calculator_screenshots PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(calculator_screenshots PRIVATE Qt6::Widgets)
 
+# ---------------------------------------------------------------------------
+# 单元测试：CalculatorEngine 逻辑 + 主窗口键盘事件
+# ---------------------------------------------------------------------------
+option(CALCULATOR_BUILD_TESTS "Build calculator unit tests" ON)
+
+if(CALCULATOR_BUILD_TESTS)
+    find_package(Qt6 6.5 REQUIRED COMPONENTS Test)
+
+    qt_add_executable(tst_calculator
+        tests/tst_calculator.cpp
+        mainwindow.cpp
+        mainwindow.h
+        calculatorengine.cpp
+        calculatorengine.h
+    )
+
+    calculator_add_generated_files(tst_calculator)
+
+    # tst_calculator.cpp 内含 Q_OBJECT 测试类，单独生成 .moc 供其包含
+    set(test_gen_dir "${CMAKE_CURRENT_BINARY_DIR}/tst_calculator_generated")
+    set(test_moc "${test_gen_dir}/tst_calculator.moc")
+    add_custom_command(
+        OUTPUT "${test_moc}"
+        COMMAND $<TARGET_FILE:Qt6::moc> "${CMAKE_CURRENT_SOURCE_DIR}/tests/tst_calculator.cpp"
+                -o "${test_moc}"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/tests/tst_calculator.cpp"
+        COMMENT "moc: tests/tst_calculator.cpp"
+        VERBATIM)
+    set_source_files_properties(tests/tst_calculator.cpp PROPERTIES OBJECT_DEPENDS "${test_moc}")
+    target_sources(tst_calculator PRIVATE "${test_moc}")
+    target_include_directories(tst_calculator PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests"
+        "${test_gen_dir}")
+
+    target_link_libraries(tst_calculator PRIVATE Qt6::Widgets Qt6::Test)
+
+    enable_testing()
+    add_test(NAME calculator_unit_tests COMMAND tst_calculator)
+endif()
+
 install(TARGETS QtCalculator
     BUNDLE  DESTINATION .
     RUNTIME DESTINATION bin
