@@ -1,0 +1,8 @@
+build/
+build-*/
+*.user
+*.user.*
+.qtc_clangd/
+CMakeLists.txt.user*
+compile_commands.json
+.DS_Store
