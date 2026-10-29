@@ -1,0 +1,46 @@
+# v1 版本（朴素实现）的异常输入复现脚本
+click btn1
+click btnDot
+click btn2
+click btnDot
+click btn3
+snap 01_repeat_dot
+click btnClear
+
+click btn8
+click btnDivide
+click btn0
+click btnEquals
+snap 02_div_zero
+click btnClear
+
+click btn2
+click btnAdd
+click btn3
+click btnEquals
+click btn4
+snap 03_after_result
+click btnClear
+
+click btn2
+click btnAdd
+click btn3
+click btnAdd
+click btn4
+click btnEquals
+snap 04_chain
+click btnClear
+
+click btn2
+click btnAdd
+click btn3
+click btnEquals
+click btnBackspace
+snap 05_backspace_result
+click btnClear
+
+click btn1
+click btnDivide
+click btn3
+click btnEquals
+snap 06_precision

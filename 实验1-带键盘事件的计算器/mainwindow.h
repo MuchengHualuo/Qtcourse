@@ -1,6 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "calculatorengine.h"
+
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
@@ -10,9 +12,7 @@ class MainWindow;
 QT_END_NAMESPACE
 
 /**
- * @brief 计算器主窗口。
- *
- * 界面由 Qt Designer 生成的 mainwindow.ui 提供，本阶段先搭建窗口骨架。
+ * @brief 计算器主窗口：负责界面呈现，把按钮点击转换为计算器引擎的输入动作。
  */
 class MainWindow : public QMainWindow
 {
@@ -23,7 +23,12 @@ public:
     ~MainWindow() override;
 
 private:
+    void connectButtons();
+    void handleToken(const QString &token);
+    void refreshDisplay();
+
     Ui::MainWindow *ui;
+    CalculatorEngine m_engine;
 };
 
 #endif // MAINWINDOW_H

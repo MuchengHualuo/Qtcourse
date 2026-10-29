@@ -53,11 +53,27 @@ qt_add_executable(QtCalculator WIN32
     main.cpp
     mainwindow.cpp
     mainwindow.h
+    calculatorengine.cpp
+    calculatorengine.h
 )
 
 calculator_add_generated_files(QtCalculator)
 
 target_link_libraries(QtCalculator PRIVATE Qt6::Widgets)
+
+# 开发辅助工具：按脚本驱动界面并保存截图，用于生成实验报告插图与演示帧。
+qt_add_executable(calculator_screenshots
+    tools/screenshot_tool.cpp
+    mainwindow.cpp
+    mainwindow.h
+    calculatorengine.cpp
+    calculatorengine.h
+)
+
+calculator_add_generated_files(calculator_screenshots)
+
+target_include_directories(calculator_screenshots PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(calculator_screenshots PRIVATE Qt6::Widgets)
 
 install(TARGETS QtCalculator
     BUNDLE  DESTINATION .
