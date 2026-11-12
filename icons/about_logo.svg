@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 64 64">
+  <!-- 记事本 -->
+  <rect x="6" y="14" width="34" height="42" rx="4" fill="#b7c4d1"/>
+  <rect x="10" y="18" width="26" height="34" rx="2" fill="#ffffff"/>
+  <!-- 顶部装订线圈 -->
+  <g fill="#93a5b6">
+    <rect x="9" y="8" width="5" height="12" rx="2.5"/>
+    <rect x="17" y="8" width="5" height="12" rx="2.5"/>
+    <rect x="25" y="8" width="5" height="12" rx="2.5"/>
+    <rect x="33" y="8" width="5" height="12" rx="2.5"/>
+  </g>
+  <!-- 页面横线 -->
+  <g stroke="#c4d7e8" stroke-width="2.4" stroke-linecap="round">
+    <path d="M14 24h18"/>
+    <path d="M14 30h18"/>
+    <path d="M14 36h18"/>
+    <path d="M14 42h12"/>
+  </g>
+  <!-- 铅笔 -->
+  <g transform="rotate(40 42 36)">
+    <rect x="38" y="8" width="9" height="26" fill="#e8873c"/>
+    <rect x="38" y="8" width="4" height="26" fill="#f2a154"/>
+    <rect x="38" y="34" width="9" height="6" fill="#e5e9ee"/>
+    <polygon points="38,40 47,40 42.5,48" fill="#f2dcc2"/>
+    <polygon points="41,44.5 44,44.5 42.5,48" fill="#3d434b"/>
+  </g>
+</svg>

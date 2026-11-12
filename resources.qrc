@@ -20,5 +20,6 @@
         <file>icons/toolbar.svg</file>
         <file>icons/statusbar.svg</file>
         <file>icons/about.svg</file>
+        <file>icons/about_logo.svg</file>
     </qresource>
 </RCC>
