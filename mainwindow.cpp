@@ -171,8 +171,20 @@ void MainWindow::updateWindowTitle()
 void MainWindow::setCurrentFile(const QString &fileName)
 {
     m_currentFile = fileName;
+    if (!fileName.isEmpty())
+        m_lastDir = QFileInfo(fileName).absolutePath();
     ui->editor->document()->setModified(false);
     updateModificationState();
+}
+
+QString MainWindow::defaultDir() const
+{
+    // 优先使用当前文件所在目录，其次使用上次访问过的目录
+    if (!m_currentFile.isEmpty())
+        return QFileInfo(m_currentFile).absolutePath();
+    if (!m_lastDir.isEmpty())
+        return m_lastDir;
+    return QDir::currentPath();
 }
 
 // ---------------------------------------------------------------- 文件操作
@@ -193,7 +205,7 @@ void MainWindow::openFile()
         return;
 
     const QString fileName = QFileDialog::getOpenFileName(
-        this, tr("打开文件"), QDir::homePath(),
+        this, tr("打开文件"), defaultDir(),
         tr("文本文件 (*.txt *.md *.cpp *.h *.log);;所有文件 (*.*)"));
     if (fileName.isEmpty())
         return;
@@ -266,7 +278,7 @@ bool MainWindow::saveFileAs()
 {
     QString fileName = QFileDialog::getSaveFileName(
         this, tr("另存为"),
-        m_currentFile.isEmpty() ? QDir::homePath() + QStringLiteral("/无标题.txt") : m_currentFile,
+        (m_currentFile.isEmpty() ? defaultDir() + QStringLiteral("/无标题.txt") : m_currentFile),
         tr("文本文件 (*.txt);;Markdown 文件 (*.md);;所有文件 (*.*)"));
     if (fileName.isEmpty())
         return false;

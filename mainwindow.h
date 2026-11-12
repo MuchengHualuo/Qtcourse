@@ -58,6 +58,7 @@ private slots:
 private:
     bool maybeSave();                          // 关闭/新建/打开前询问是否保存
     bool saveToFile(const QString &fileName);  // 真正写文件
+    QString defaultDir() const;                // 打开/另存为对话框的默认目录
     void setCurrentFile(const QString &fileName);
     void updateWindowTitle();
     bool findFrom(const QString &text, bool caseSensitive, bool &wrapped);  // 返回是否找到
@@ -66,6 +67,7 @@ private:
 
     Ui::MainWindow *ui;
     QString m_currentFile;
+    QString m_lastDir;
     FindDialog *m_findDialog = nullptr;
     ReplaceDialog *m_replaceDialog = nullptr;
     QTimer *m_autoSaveTimer = nullptr;
